@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <author>Rachel Mant</author>
+ <class>Specter</class>
+ <widget class="QMainWindow" name="Specter">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>960</width>
+    <height>720</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Specter</string>
+  </property>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

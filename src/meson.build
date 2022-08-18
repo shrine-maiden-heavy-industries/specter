@@ -7,8 +7,15 @@ if target_machine.system() == 'windows'
 endif
 
 specterSrcs = [
+	'mainWindow.cxx',
 	'specter.cxx'
 ]
+
+specterSrcs += qt5.preprocess(
+	ui_files: [
+		'ui/specter.ui'
+	]
+)
 
 executable(
 	'specter',
