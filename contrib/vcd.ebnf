@@ -1,0 +1,80 @@
+(* Modified EBNF Grammar for VCD files *)
+
+(* Type Constant ranges *)
+SYMBOLS       = '{' | '|' | '}' | '~' | '[' | '\\' | ']' | '^' |
+				'_' | '`' | '!' | '"' | '#' | '$'  | '%' | '&' |
+				'(' | ')' | '*' | '+' | ',' | '-'  | '.' | '/' |
+				':' | ';' | '<' | '=' | '>' | '?'  | '@' | '\'';
+HEX_UPPER     = 'A' | 'B' | 'C' | 'D' | 'E' | 'F'              ;
+ALPHA_UPPER   = HEX_UPPER | 'G' | 'H' | 'I' | 'J' | 'K' | 'L'  |
+				'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T'  |
+				'U' | 'V' | 'W' | 'X' | 'Y' | 'Z'              ;
+HEX_LOWER     = 'a' | 'b' | 'c' | 'd' | 'e' | 'f'              ;
+ALPHA_LOWER   = HEX_LOWER | 'g' | 'h' | 'i' | 'j' | 'k' | 'l'  |
+				'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't'  |
+				'u' | 'v' | 'w' | 'x' | 'y' | 'z'              ;
+BIN_DIGITS    = '0'        | '1'                               ;
+OCT_DIGITS    = BIN_DIGITS | '2' | '3' | '4' | '5' | '6' | '7' ;
+DEC_DIGITS    = OCT_DIGITS | '8' | '9'                         ;
+HEX_DIGITS    = DEC_DIGITS | HEX_UPPER | HEX_LOWER             ;
+NUM_SIGN      = '+' | '-'                                      ;
+REAL_CONSTS   = [ NUM_SIGN ], 'inf' | 'nan'                    ;
+
+VALID_CHAR    = SYMBOLS | DEC_DIGITS | ALPHA_UPPER | ALPHA_LOWER ;
+
+(* Number Formats *)
+BIN_NUM       = ('b' | 'B') BIN_DIGITS* ;
+OCT_NUM       = OCT_DIGITS*             ;
+DEC_NUM       = DEC_DIGITS*             ;
+REAL_NUM      = REAL_CONSTS | [ NUM_SIGN ], DEC_DIGITS*, [ '.', DEC_DIGITS*, ('e' | 'E' | 'f' | 'F'), NUM_SIGN, DEC_DIGITS* ] ;
+
+(* Keyword constants *)
+VAR_TYPE      = 'event'    | 'integer' | 'parameter' | 'real'    |
+				'realtime' | 'reg'     | 'supply0'   | 'supply1' |
+				'time'     | 'tri'     | 'triand'    | 'trior'   |
+				'trireg'   | 'tri0'    | 'tri1'      | 'wand'    |
+				'wire'     | 'wor'     | 'string'                ;
+SCOPE_TYPE    = 'begin'    | 'fork'    | 'function'  | 'module'  |
+				'task'                                           ;
+TIME_NUMB     = '1'        | '10'      | '100'                   ;
+TIME_UNIT     = 's'        | 'ms'      | 'us'       | 'ns'       |
+				'ps'       | 'fs'                                ;
+VALUE         = '0'        | '1'       | 'x'        | 'X'        |
+				'z'        | 'Z'       ;
+
+(* Composite Types *)
+SLICE         = DEC_NUM, ':', DEC_NUM                                     ;
+IDENT         = VALID_CHAR*                                               ;
+SIM_TIME      = '#' DEC_NUM                                               ;
+REFERENCE     = IDENT | IDENT, '[', DEC_NUM ,']' | IDENT, '[', SLICE ,']' ;
+VECTOR_CHANGE = (BIN_NUM | REAL_NUM), IDENT                               ;
+GTKWAVE_STR   = 's', IDENT, ' ', IDENT                                    ;
+SCALAR_CHANGE = VALUE, IDENT | GTKWAVE_STR                                ;
+
+(*  *)
+VALUE_CHANGE  = SCALAR_CHANGE | VECTOR_CHANGE ;
+
+(* Command Definitions *)
+CMD_COMMENT   = '$comment ',       [ IDENT                                  ], '$end' ;
+CMD_DATE      = '$date ',          [ IDENT                                  ], '$end' ;
+CMD_VERSION   = '$version ',       [ IDENT                                  ], '$end' ;
+CMD_SCOPE     = '$scope ',         [ SCOPE_TYPE, ' ', IDENT                 ], '$end' ;
+CMD_UPSCOPE   = '$upscope ',                                                   '$end' ;
+CMD_TIMESCL   = '$timescale',      [ TIME_NUMB, ' ', TIME_UNIT              ], '$end' ;
+CMD_VAR       = '$var ',           [ VAR_TYPE, ' ', DEC_NUM, ' ', REFERENCE ]
+CMD_ENDDEFS   = '$enddefinitions',                                             '$end' ;
+CMD_DUMPALL   = '$dumpall ',       VALUE_CHANGE*,                              '$end' ;
+CMD_DUMPOFF   = '$dumpoff ',       VALUE_CHANGE*,                              '$end' ;
+CMD_DUMPON    = '$dumpon ',        VALUE_CHANGE*,                              '$end' ;
+CMD_DUMPVAR   = '$dumvars ',       VALUE_CHANGE*,                              '$end' ;
+
+(* Decleration Commands *)
+DECL_CMD      = CMD_COMMENT | CMD_DATE    | CMD_VERSION | CMD_SCOPE  |
+				CMD_UPSCOPE | CMD_TIMESCL | CMD_VAR                  ;
+
+(* Simulation Commands *)
+SIM_CMD       = CMD_COMMENT | CMD_DUMPALL | CMD_DUMPOFF | CMD_DUMPON |
+				CMD_DUMPVAR | SIM_TIME    | VALUE_CHANGE             ;
+
+(* Full VCD File *)
+VCD_FILE      = DECL_CMD*, CMD_ENDDEFS, SIM_CMD*                     ;
