@@ -4,7 +4,7 @@
 SYMBOLS       = '{' | '|' | '}' | '~' | '[' | '\\' | ']' | '^' |
 				'_' | '`' | '!' | '"' | '#' | '$'  | '%' | '&' |
 				'(' | ')' | '*' | '+' | ',' | '-'  | '.' | '/' |
-				':' | ';' | '<' | '=' | '>' | '?'  | '@' | '\'';
+				':' | ';' | '<' | '=' | '>' | '?'  | '@' | "'" ;
 HEX_UPPER     = 'A' | 'B' | 'C' | 'D' | 'E' | 'F'              ;
 ALPHA_UPPER   = HEX_UPPER | 'G' | 'H' | 'I' | 'J' | 'K' | 'L'  |
 				'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T'  |
@@ -23,10 +23,10 @@ REAL_CONSTS   = [ NUM_SIGN ], 'inf' | 'nan'                    ;
 VALID_CHAR    = SYMBOLS | DEC_DIGITS | ALPHA_UPPER | ALPHA_LOWER ;
 
 (* Number Formats *)
-BIN_NUM       = ('b' | 'B') BIN_DIGITS* ;
-OCT_NUM       = OCT_DIGITS*             ;
-DEC_NUM       = DEC_DIGITS*             ;
-REAL_NUM      = REAL_CONSTS | [ NUM_SIGN ], DEC_DIGITS*, [ '.', DEC_DIGITS*, ('e' | 'E' | 'f' | 'F'), NUM_SIGN, DEC_DIGITS* ] ;
+BIN_NUM       = ('b' | 'B'), BIN_DIGITS, { BIN_DIGITS } ;
+OCT_NUM       = OCT_DIGITS, { OCT_DIGITS }              ;
+DEC_NUM       = DEC_DIGITS, { DEC_DIGITS }              ;
+REAL_NUM      = REAL_CONSTS | [ NUM_SIGN ], { DEC_DIGITS }, [ '.', DEC_DIGITS, { DEC_DIGITS }, ('e' | 'E' | 'f' | 'F'), NUM_SIGN, DEC_DIGITS, { DEC_DIGITS } ] ;
 
 (* Keyword constants *)
 VAR_TYPE      = 'event'    | 'integer' | 'parameter' | 'real'    |
@@ -44,8 +44,8 @@ VALUE         = '0'        | '1'       | 'x'        | 'X'        |
 
 (* Composite Types *)
 SLICE         = DEC_NUM, ':', DEC_NUM                                     ;
-IDENT         = VALID_CHAR*                                               ;
-SIM_TIME      = '#' DEC_NUM                                               ;
+IDENT         = VALID_CHAR, { VALID_CHAR }                                ;
+SIM_TIME      = '#', DEC_NUM                                              ;
 REFERENCE     = IDENT | IDENT, '[', DEC_NUM ,']' | IDENT, '[', SLICE ,']' ;
 VECTOR_CHANGE = (BIN_NUM | REAL_NUM), IDENT                               ;
 GTKWAVE_STR   = 's', IDENT, ' ', IDENT                                    ;
@@ -61,12 +61,12 @@ CMD_VERSION   = '$version ',       [ IDENT                                  ], '
 CMD_SCOPE     = '$scope ',         [ SCOPE_TYPE, ' ', IDENT                 ], '$end' ;
 CMD_UPSCOPE   = '$upscope ',                                                   '$end' ;
 CMD_TIMESCL   = '$timescale',      [ TIME_NUMB, ' ', TIME_UNIT              ], '$end' ;
-CMD_VAR       = '$var ',           [ VAR_TYPE, ' ', DEC_NUM, ' ', REFERENCE ]
+CMD_VAR       = '$var ',           [ VAR_TYPE, ' ', DEC_NUM, ' ', REFERENCE ], '$end' ;
 CMD_ENDDEFS   = '$enddefinitions',                                             '$end' ;
-CMD_DUMPALL   = '$dumpall ',       VALUE_CHANGE*,                              '$end' ;
-CMD_DUMPOFF   = '$dumpoff ',       VALUE_CHANGE*,                              '$end' ;
-CMD_DUMPON    = '$dumpon ',        VALUE_CHANGE*,                              '$end' ;
-CMD_DUMPVAR   = '$dumvars ',       VALUE_CHANGE*,                              '$end' ;
+CMD_DUMPALL   = '$dumpall ',       { VALUE_CHANGE },                           '$end' ;
+CMD_DUMPOFF   = '$dumpoff ',       { VALUE_CHANGE },                           '$end' ;
+CMD_DUMPON    = '$dumpon ',        { VALUE_CHANGE },                           '$end' ;
+CMD_DUMPVAR   = '$dumvars ',       { VALUE_CHANGE },                           '$end' ;
 
 (* Decleration Commands *)
 DECL_CMD      = CMD_COMMENT | CMD_DATE    | CMD_VERSION | CMD_SCOPE  |
@@ -77,4 +77,4 @@ SIM_CMD       = CMD_COMMENT | CMD_DUMPALL | CMD_DUMPOFF | CMD_DUMPON |
 				CMD_DUMPVAR | SIM_TIME    | VALUE_CHANGE             ;
 
 (* Full VCD File *)
-VCD_FILE      = DECL_CMD*, CMD_ENDDEFS, SIM_CMD*                     ;
+VCD_FILE      = { DECL_CMD }, CMD_ENDDEFS, { SIM_CMD }               ;
